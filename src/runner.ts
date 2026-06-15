@@ -17,11 +17,35 @@ export async function researchCafe(
   config: RunnerConfig,
 ): Promise<RunnerResult> {
   const prompt = buildPrompt(place);
-  const { stdout } = await runCli(prompt, config);
-  const llmText = extractLlmText(stdout, config.agent);
-  const json = extractJsonObject(llmText);
-  const parsed = researchedDataSchema.parse(json);
-  return { data: parsed, rawOutput: stdout };
+  const attemptAgents: Array<"claude" | "codex"> =
+    config.agent === "codex" ? ["codex", "claude"] : ["claude"];
+
+  let lastError: Error | null = null;
+
+  for (const agent of attemptAgents) {
+    try {
+      const { stdout } = await runCli(prompt, { ...config, agent });
+      const llmText = extractLlmText(stdout, agent);
+      const json = extractJsonObject(llmText);
+      const parsed = researchedDataSchema.parse(json);
+      return { data: parsed, rawOutput: stdout };
+    } catch (err) {
+      const normalized =
+        err instanceof Error ? err : new Error(String(err ?? "unknown error"));
+      lastError = new Error(`[${agent}] ${normalized.message}`);
+      if (agent === "codex" && attemptAgents.includes("claude")) {
+        console.warn(
+          "[runner] codex 실행 실패, claude 로 폴백합니다:",
+          normalized.message,
+        );
+      }
+    }
+  }
+
+  throw (
+    lastError ??
+    new Error("연구 작업 실행 실패: codex/claude 결과를 얻지 못했습니다.")
+  );
 }
 
 // ── CLI spawn ───────────────────────────────────────────────────────────────
@@ -108,8 +132,7 @@ function buildCliInvocation(agent: "claude" | "codex"): {
       ],
     };
   }
-  // codex exec — 인자로 프롬프트를 받음. stdin 은 사용하지 않음.
-  // (codex 는 미구현 / 별도 처리 필요)
+  // codex exec — stdin 으로 프롬프트를 전달하고 결과를 stdout 으로 받는다.
   return {
     command: "codex",
     args: ["exec", "--full-auto"],

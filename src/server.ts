@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "http://localhost:3000")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
-const AGENT = (process.env.AGENT === "codex" ? "codex" : "claude") as
+const AGENT = (process.env.AGENT === "claude" ? "claude" : "codex") as
   | "claude"
   | "codex";
 const CONCURRENCY = Math.max(1, Number(process.env.CONCURRENCY ?? 1));
