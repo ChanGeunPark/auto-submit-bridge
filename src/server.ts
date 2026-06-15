@@ -168,14 +168,13 @@ app.get("/events", (c) => {
 
 // ── 시작 ────────────────────────────────────────────────────────────────────
 
-serve(
-  { fetch: app.fetch, port: PORT, hostname: "127.0.0.1" },
-  ({ port }) => {
-    console.log(`▶ auto-submit-bridge listening on http://127.0.0.1:${port}`);
-    console.log(`  agent=${AGENT}  concurrency=${CONCURRENCY}  timeout=${TIMEOUT_MS}ms`);
-    console.log(`  allowed origins: ${ALLOWED_ORIGINS.join(", ")}`);
-  },
-);
+serve({ fetch: app.fetch, port: PORT, hostname: "127.0.0.1" }, ({ port }) => {
+  console.log(`▶ auto-submit-bridge listening on http://127.0.0.1:${port}`);
+  console.log(
+    `  agent=${AGENT}  concurrency=${CONCURRENCY}  timeout=${TIMEOUT_MS}ms`,
+  );
+  console.log(`  allowed origins: ${ALLOWED_ORIGINS.join(", ")}`);
+});
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -185,7 +184,9 @@ function matchOrigin(origin: string, patterns: string[]): boolean {
     if (pattern === origin) return true;
     if (pattern.includes("*")) {
       const re = new RegExp(
-        "^" + pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$",
+        "^" +
+          pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") +
+          "$",
       );
       return re.test(origin);
     }

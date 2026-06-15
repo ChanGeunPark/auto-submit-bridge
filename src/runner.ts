@@ -72,7 +72,7 @@ function runCli(
       child.kill("SIGTERM");
       reject(
         new Error(
-          `CLI 타임아웃 (${timeoutMs}ms 초과). 네트워크 또는 인증 상태 확인 필요.`,
+          `CLI 타임아웃 (${timeoutMs}ms 초과). 네트워크/인증/승인 대기 상태를 확인하세요.\nstderr: ${stderr.slice(0, 500)}`,
         ),
       );
     }, timeoutMs);
@@ -132,10 +132,10 @@ function buildCliInvocation(agent: "claude" | "codex"): {
       ],
     };
   }
-  // codex exec — stdin 으로 프롬프트를 전달하고 결과를 stdout 으로 받는다.
+  // codex exec (non-interactive) — 승인 대기 없이 stdin 프롬프트를 실행.
   return {
     command: "codex",
-    args: ["exec", "--full-auto"],
+    args: ["exec", "--dangerously-bypass-approvals-and-sandbox", "-"],
   };
 }
 
